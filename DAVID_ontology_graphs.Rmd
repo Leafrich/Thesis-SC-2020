@@ -1,0 +1,162 @@
+---
+title: "DAVID analysis"
+author: "S.W.T. Corstjens"
+date: "17-5-2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+DAVID analysis data
+```{r}
+D01over <- read.delim('D0-1 over expressed.txt')
+D01under <- read.delim('D0-1 under expressed.txt')
+
+D12over <- read.delim('D1-2 over exp.txt')
+D12under <- read.delim('D1-2 under exp.txt')
+
+D23over <- read.delim('D2-3 over.txt')
+
+D34over <- read.delim('D3-4 over exp.txt')
+D34under <- read.delim('D3-4 under exp.txt')
+
+D45over <- read.delim('D4-5 over.txt')
+D45under <- read.delim('D4-5 under.txt')
+```
+
+Barplots DAVID analysis
+```{r}
+nD01o <- unlist(strsplit(as.vector(D01over[1:5,2]), "~"))
+nD01u <- unlist(strsplit(as.vector(D01under[1:5,2]), "~"))
+
+par(las = 2)
+par(mar=c(6,7,4,2))
+
+#day01
+bp01o <- barplot(as.vector(D01over[1:5,5]), 
+              names.arg = nD01o[c(1,3,5,7,9)], 
+              xlab = "p-value", 
+              horiz = T, 
+              cex.names = 0.95, 
+              cex.axis = 0.8, 
+              cex = 1,
+              main = "Barplot pValues Day 0-1 over")
+text(0, bp01o, 
+     formatC(as.vector(D01over[1:5,5]), format = "e", digits = 2), 
+     pos = 4,
+     cex = 0.8)
+
+bp01u <- barplot(as.vector(D01under[1:5,5]), 
+              names.arg = nD01u[c(1,3,5,7,9)], 
+              xlab = "p-value", 
+              horiz = T, 
+              cex.names = 0.95, 
+              cex.axis = 0.8, 
+              cex = 1,
+              main = "Barplot pValues Day 0-1 under")
+text(0, bp01u, 
+     formatC(as.vector(D01under[1:5,5]), format = "e", digits = 2), 
+     pos = 4,
+     cex = 0.8)
+
+#day12
+
+bp12o <- barplot(as.vector(D12over[1:5,5]), 
+              names.arg = nD12o[c(1,3,5,7,9)], 
+              xlab = "p-value", 
+              horiz = T, 
+              cex.names = 0.95, 
+              cex.axis = 0.8, 
+              cex = 1,
+              main = "Barplot pValues Day 1-2 over")
+text(0, bp12o, 
+     formatC(as.vector(D12over[1:5,5]), format = "e", digits = 2), 
+     pos = 4,
+     cex = 0.8)
+
+bp12u <- barplot(as.vector(D12under[1:5,5]), 
+              names.arg = nD12u[c(1,3,5,7,9)], 
+              xlab = "p-value", 
+              horiz = T, 
+              cex.names = 0.95, 
+              cex.axis = 0.8, 
+              cex = 1,
+              main = "Barplot pValues Day 1-2 under")
+text(0, bp12u, 
+     formatC(as.vector(D12under[1:5,5]), format = "e", digits = 2), 
+     pos = 4,
+     cex = 0.8)
+
+#day23
+
+bp23o <- barplot(as.vector(D23over[1:5,5]), 
+              names.arg = nD23o[c(1,3,5,7,9)], 
+              xlab = "p-value", 
+              horiz = T, 
+              cex.names = 0.95, 
+              cex.axis = 0.8, 
+              cex = 1,
+              main = "Barplot pValues Day 2-3 over")
+text(0, bp23o, 
+     formatC(as.vector(D23over[1:5,5]), format = "e", digits = 2), 
+     pos = 4,
+     cex = 0.8)
+
+#day34
+
+bp34o <- barplot(as.vector(D34over[1:5,5]), 
+              names.arg = nD34o[c(1,3,5,7,9)], 
+              xlab = "p-value", 
+              horiz = T, 
+              cex.names = 0.95, 
+              cex.axis = 0.8, 
+              cex = 1,
+              main = "Barplot pValues Day 3-4 over")
+text(0, bp34o, 
+     formatC(as.vector(D34over[1:5,5]), format = "e", digits = 2), 
+     pos = 4,
+     cex = 0.8)
+
+bp34u <- barplot(as.vector(D34under[1:5,5]), 
+              names.arg = nD34u[c(1,3,5,7,9)], 
+              xlab = "p-value", 
+              horiz = T, 
+              cex.names = 0.95, 
+              cex.axis = 0.8, 
+              cex = 1,
+              main = "Barplot pValues Day 3-4 under")
+text(0, bp34u, 
+     formatC(as.vector(D34under[1:5,5]), format = "e", digits = 2), 
+     pos = 4,
+     cex = 0.8)
+
+#day45
+
+bp45o <- barplot(as.vector(D45over[1:5,5]), 
+              names.arg = nD45o[c(1,3,5,7,9)], 
+              xlab = "p-value", 
+              horiz = T, 
+              cex.names = 0.95, 
+              cex.axis = 0.8, 
+              cex = 1,
+              main = "Barplot pValues Day 4-5 over")
+text(0, bp45o, 
+     formatC(as.vector(D45over[1:5,5]), format = "e", digits = 2), 
+     pos = 4,
+     cex = 0.8)
+
+bp45u <- barplot(as.vector(D45under[1:5,5]), 
+              names.arg = nD45u[c(1,3,5,7,9)], 
+              xlab = "p-value", 
+              horiz = T, 
+              cex.names = 0.95, 
+              cex.axis = 0.8, 
+              cex = 1,
+              main = "Barplot pValues Day 4-5 under")
+text(0, bp45u, 
+     formatC(as.vector(D45under[1:5,5]), format = "e", digits = 2), 
+     pos = 4,
+     cex = 0.8)
+```

@@ -1,0 +1,259 @@
+---
+title: "Thesis-SC-2020"
+author: "S.W.T. Corstjens"
+date: "17-5-2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T,
+                      message = F)
+```
+
+```{r loading library, include=F}
+library(GEOquery)
+library(dplyr)
+library(edgeR)
+library(limma)
+library(Glimma)
+library(gplots)
+library(org.Mm.eg.db)
+library(rprojroot)
+library(ggplot2)
+library(biomaRt)
+library(pheatmap)
+library(topGO)
+```
+
+Root
+```{r setting root}
+rm(list=ls())
+
+root <- find_root_file(criterion = is_rstudio_project)
+root
+```
+
+
+Functions
+```{r}
+scatter = function(x) {
+    # x[,1] is EntrezID fct
+    # x[,2] is Genename 
+    
+    tmp <- log2(dgeObj$counts[x,])
+    tmp <- matrix(tmp, nrow = 1)
+    colnames(tmp) <- c(rep(0, times = 3), rep(1, times = 3),
+                       rep(2, times = 3), rep(3, times = 3),
+                       rep(4, times = 3), rep(5, times = 3))
+
+    l <- matrix(c(mean(tmp[1:3]), mean(tmp[4:6]),
+                         mean(tmp[6:9]), mean(tmp[9:12]),
+                         mean(tmp[13:15]), mean(tmp[16:18])))
+    
+    k <- c(0:5)
+    fit <- lm(l~poly(k,3,raw=TRUE))
+    xx <- seq(0,5, length=50)
+
+    plot(colnames(tmp), tmp,
+        main = counts[x, 2],
+        xlab = "Day",
+        ylab = "Log2(CPM)")
+    lines(xx, predict(fit, data.frame(k=xx)), col="purple")
+    } 
+```
+
+```{r}
+isolate = function(genes, testData) {
+    # genes of interest a dataframe with:
+        # goi[,1] is entrezID
+        # goi[,2] is genename
+    # testData is an DGEExact class object from edgeR
+    
+    geCounts <- as.data.frame(testData$table)
+    pVal <- geCounts[as.character(genes[,1]),]
+    rownames(pVal) <- genes$genename 
+    # goiPval <- na.omit(pVal[pVal$logFC < -1 | pVal$logFC > 1, ])
+    goiPval <- na.omit(pVal[pVal$PValue < 0.05, ])
+    
+    print(goiPval)
+}
+```
+
+
+Downloading Seq data
+```{r downloading dataset, include = F}
+#https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE115955
+getGEOSuppFiles("GSE115955", makeDirectory = F)
+counts <- read.csv("GSE115955_d0d5_RPKM.csv.gz")
+rownames(counts) <- counts[,1]
+dfa <- counts[,3:20]
+```
+
+grouping
+```{r}
+group <- c(rep("Day0", times = 3), 
+           rep("Day1", times = 3), 
+           rep("Day2", times = 3),
+           rep("Day3", times = 3),
+           rep("Day4", times = 3),
+           rep("Day5", times = 3))
+DA <- DGEList(counts = dfa, group=group, genes=counts[,2])
+```
+
+normalizing data
+```{r}
+DnormA <-  calcNormFactors(DA)
+DcA <- estimateCommonDisp(DnormA)
+DtA <- estimateTagwiseDisp(DcA)
+```
+
+Testing
+```{r}
+D01t <- exactTest(DtA, pair = c("Day0", "Day1"))
+D12t <- exactTest(DtA, pair = c("Day1", "Day2"))
+D23t <- exactTest(DtA, pair = c("Day2", "Day3"))
+D34t <- exactTest(DtA, pair = c("Day3", "Day4"))
+D45t <- exactTest(DtA, pair = c("Day4", "Day5"))
+```
+
+CSV files for DAVID analysis
+```{r}
+Dt.tableA <- topTags(D01t,n=nrow(DtA$counts))$table
+Dt.tableA <- Dt.tableA[Dt.tableA$PValue <= 0.05,]
+Dt.tableA <- Dt.tableA[Dt.tableA$logFC >= 1.0 | Dt.tableA$logFC <= -1.0,]
+write.csv(Dt.tableA, file=paste(dataset.name = "D0-1.csv", sep=""), row.names = TRUE, quote = F)
+
+Dt.tableB <- topTags(D12t,n=nrow(DtA$counts))$table
+Dt.tableB <- Dt.tableB[Dt.tableB$PValue <= 0.05,]
+Dt.tableB <- Dt.tableB[Dt.tableB$logFC >= 1.0 | Dt.tableB$logFC <= -1.0,]
+write.csv(Dt.tableB, file=paste(dataset.name = "D1-2.csv", sep=""), row.names = TRUE, quote = F)
+
+Dt.tableC <- topTags(D23t,n=nrow(DtA$counts))$table
+Dt.tableC <- Dt.tableC[Dt.tableC$PValue <= 0.05,]
+Dt.tableC <- Dt.tableC[Dt.tableC$logFC >= 1.0 | Dt.tableC$logFC <= -1.0,]
+write.csv(Dt.tableC, file=paste(dataset.name = "D2-3.csv", sep=""), row.names = TRUE, quote = F)
+
+Dt.tableD <- topTags(D34t,n=nrow(DtA$counts))$table
+Dt.tableD <- Dt.tableD[Dt.tableD$PValue <= 0.05,]
+Dt.tableD <- Dt.tableD[Dt.tableD$logFC >= 1.0 | Dt.tableD$logFC <= -1.0,]
+write.csv(Dt.tableD, file=paste(dataset.name = "D3-4.csv", sep=""), row.names = TRUE, quote = F)
+
+Dt.tableE <- topTags(D45t,n=nrow(DtA$counts))$table
+Dt.tableE <- Dt.tableE[Dt.tableE$PValue <= 0.05,]
+Dt.tableE <- Dt.tableE[Dt.tableE$logFC >= 1.0 | Dt.tableE$logFC <= -1.0,]
+write.csv(Dt.tableE, file=paste(dataset.name = "D4-5.csv", sep=""), row.names = TRUE, quote = F)
+```
+
+Filtering lowly expressed genes
+```{r filtering lowly expressed genes}
+myCPM <- cpm(dfa)
+
+thresh <- myCPM > 1
+keep <- rowSums(thresh) >= 2
+
+counts.keep <- dfa[keep,]
+nrow(myCPM)
+nrow(counts.keep)
+```
+
+DGEobject and normalization (barplots)
+```{r creating DGEobj and normalization}
+group <- c(rep("Day0", times = 3), 
+           rep("Day1", times = 3), 
+           rep("Day2", times = 3),
+           rep("Day3", times = 3),
+           rep("Day4", times = 3),
+           rep("Day5", times = 3))
+
+dgeObj <- DGEList(counts = counts.keep, group = group)
+
+groupLev <- as.data.frame(matrix(group, nrow = 18))
+colnames(groupLev) <- c("time")
+levels(groupLev$time)
+
+par(mfrow = c(1,2))
+
+logcounts <- cpm(dgeObj,log=T)
+boxplot(logcounts, xlab="", ylab="Log2 counts per million",las=2, col = "red3")
+abline(h=median(logcounts),col="green")
+title("logCPMs unnormalized")
+
+dgeObj <- calcNormFactors(dgeObj)
+
+logcounts <- cpm(dgeObj,log=T)
+boxplot(logcounts, xlab="", ylab="Log2 counts per million",las=2, col = "blue3")
+abline(h=median(logcounts),col="orange")
+title("logCPMs normalized")
+```
+
+MDS plot
+```{r MDS plot}
+col.day <- c("red3","orange3", "yellow3", "green3","blue3","purple2")[groupLev$time]
+
+plotMDS(dgeObj,col=col.day)
+legend("bottomright",fill=c("red3","orange3", "yellow3", "green3","blue3","purple2"),legend=levels(groupLev$time))
+title("MDS plot")
+```
+
+Genes of interest 
+```{r goi listing}
+EnID <- c("74498", "Gorasp1",
+         "70231", "Gorasp2", 
+         "17110", "lysozym", 
+         "14160", "LGR5",
+         "380924", "OLFM4",
+         "17345", "KI67",
+         "17831", "Muc2", 
+         "12550", "Ecad",
+         "21872", "Z01", 
+         "16412", "IntB1", 
+         "16402", "IntA5",
+         "16403", "IntA6", 
+         "22601", "YAP1",      
+         "18128", "Notch",
+         "13388", "DLL1",
+         "16974", "Lrp6",
+         "13649", "EGFr",
+         "12166", "Bmpr1A",
+         "14365", "Fzd3")
+goi <- as.data.frame(matrix(EnID, nrow = (length(EnID)/2), ncol = 2, byrow = T))
+colnames(goi) <- c("EntrezID","genename")
+```
+
+```{r isolating goi pValues}
+    isolate(goi, D01t)
+    isolate(goi, D12t)
+    isolate(goi, D23t)
+    isolate(goi, D34t)
+    isolate(goi, D45t)
+```
+
+Plots for GoI's
+```{r GOI plotting}
+par(mfrow = c(2,3)) 
+for (j in goi[,1]) { 
+    tryCatch({
+    scatter(j)
+  }, error=function(e){})
+} 
+``` 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
